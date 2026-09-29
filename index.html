@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#8e1717">
+  <title>Invitación | Amanda Smith</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 50% 20%, #5b0c0c 0, #250404 45%, #090202 100%);
+      font-family: Georgia, "Times New Roman", serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+    }
+
+    /* Ambiente de fondo */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .ambient::before,
+    .ambient::after {
+      content: "";
+      position: absolute;
+      width: 55vw;
+      height: 55vw;
+      max-width: 650px;
+      max-height: 650px;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: .18;
+      animation: breathe 7s ease-in-out infinite alternate;
+    }
+
+    .ambient::before {
+      background: #d7a63b;
+      top: -20%;
+      left: -15%;
+    }
+
+    .ambient::after {
+      background: #b31313;
+      right: -20%;
+      bottom: -20%;
+      animation-delay: -3s;
+    }
+
+    /* Contenedor de la invitación */
+    .stage {
+      position: relative;
+      z-index: 2;
+      width: min(100vw, 420px);
+      min-height: 100vh;
+      padding: 0 10px;
+      display: flex;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 264px;
+      transform-style: preserve-3d;
+      transform: translateY(0) scale(1);
+      transition: transform .18s ease-out;
+      filter: drop-shadow(0 20px 35px rgba(0,0,0,.55));
+      animation: entrance 1.8s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      user-select: none;
+      -webkit-user-drag: none;
+      border-radius: 1px;
+    }
+
+    /* Brillo que recorre la tarjeta */
+    .shine {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      mix-blend-mode: screen;
+      opacity: .55;
+    }
+
+    .shine::after {
+      content: "";
+      position: absolute;
+      top: -20%;
+      left: -70%;
+      width: 42%;
+      height: 140%;
+      transform: rotate(18deg);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.04),
+        rgba(255,232,174,.48),
+        rgba(255,255,255,.08),
+        transparent
+      );
+      filter: blur(2px);
+      animation: sweep 5.5s ease-in-out infinite;
+    }
+
+    /* Botón transparente sobre "CHECK LOCATION" */
+    .location-hotspot {
+      position: absolute;
+      left: 24%;
+      top: 48.1%;
+      width: 52%;
+      height: 3.4%;
+      border-radius: 50px;
+      cursor: pointer;
+      background: rgba(255,255,255,0);
+      transition: transform .2s, box-shadow .2s;
+      z-index: 5;
+    }
+
+    .location-hotspot:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 18px rgba(255,215,120,.65);
+    }
+
+    .location-hotspot:active {
+      transform: scale(.97);
+    }
+
+    /* Botón de música */
+    .music {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 48px;
+      height: 48px;
+      border: 1px solid rgba(255,220,145,.75);
+      border-radius: 50%;
+      background: rgba(80, 8, 8, .82);
+      color: #f8d99a;
+      box-shadow: 0 0 22px rgba(190, 132, 45, .35);
+      cursor: pointer;
+      z-index: 20;
+      font-size: 20px;
+      backdrop-filter: blur(8px);
+      animation: pulse 2.8s ease-in-out infinite;
+    }
+
+    .music.playing {
+      animation: spinGlow 2.2s linear infinite;
+    }
+
+    /* Partículas / pétalos */
+    .petal {
+      position: fixed;
+      top: -30px;
+      left: 0;
+      z-index: 10;
+      width: 9px;
+      height: 13px;
+      border-radius: 70% 25% 70% 25%;
+      background: linear-gradient(135deg, #f3c7c7, #9e1717 75%);
+      opacity: .75;
+      pointer-events: none;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.35));
+      animation: fall linear forwards;
+    }
+
+    .spark {
+      position: fixed;
+      z-index: 9;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #ffe5a2;
+      box-shadow: 0 0 8px #ffe5a2;
+      pointer-events: none;
+      animation: twinkle 1.7s ease-in-out infinite;
+    }
+
+    .hint {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 15;
+      color: rgba(255,238,202,.7);
+      font: 11px/1.2 Arial, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      animation: hintIn 2s 2.2s forwards;
+    }
+
+    @keyframes entrance {
+      from {
+        opacity: 0;
+        transform: translateY(55px) rotateX(7deg) scale(.94);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) rotateX(0) scale(1);
+      }
+    }
+
+    @keyframes sweep {
+      0%, 15% { transform: translateX(0) rotate(18deg); opacity: 0; }
+      28% { opacity: .9; }
+      55%, 100% { transform: translateX(430%) rotate(18deg); opacity: 0; }
+    }
+
+    @keyframes breathe {
+      from { transform: scale(.92); opacity: .12; }
+      to { transform: scale(1.08); opacity: .23; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(190,132,45,.28); }
+      50% { box-shadow: 0 0 30px rgba(235,190,92,.62); }
+    }
+
+    @keyframes spinGlow {
+      from { transform: rotate(0); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translate3d(0, -30px, 0) rotate(0deg);
+      }
+      100% {
+        transform: translate3d(var(--drift), 110vh, 0) rotate(var(--rotation));
+      }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: .15; transform: scale(.6); }
+      50% { opacity: 1; transform: scale(1.8); }
+    }
+
+    @keyframes hintIn {
+      to { opacity: 1; }
+    }
+
+    @media (min-width: 600px) {
+      .stage {
+        width: 420px;
+      }
+
+      .card {
+        max-width: 264px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="ambient"></div>
+
+  <main class="stage">
+    <div class="card" id="card">
+      <img src="invitacion.png" alt="Invitación de XV años de Amanda Smith">
+      <div class="shine"></div>
+
+      <!-- Zona invisible encima de CHECK LOCATION -->
+      <a
+        class="location-hotspot"
+        href="https://www.google.com/maps/search/?api=1&query=125%20Willow%20Lane%2C%20Rosewood%2C%20CA%2090210"
+        target="_blank"
+        rel="noopener"
+        aria-label="Abrir ubicación del evento">
+      </a>
+    </div>
+  </main>
+
+  <button class="music" id="musicBtn" aria-label="Activar música" title="Música">
+    ♪
+  </button>
+
+  <div class="hint">Toca la invitación para interactuar</div>
+
+  <!--
+    Para agregar música:
+    1. Pon un archivo llamado musica.mp3 junto a este index.html.
+    2. Quita el comentario de <audio> y cambia el botón si quieres.
+  -->
+  <audio id="music" loop preload="none">
+    <source src="musica.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const card = document.getElementById("card");
+    const musicBtn = document.getElementById("musicBtn");
+    const music = document.getElementById("music");
+
+    // Efecto 3D suave en computadora
+    window.addEventListener("pointermove", (e) => {
+      if (window.innerWidth < 700) return;
+
+      const x = (e.clientX / window.innerWidth - 0.5);
+      const y = (e.clientY / window.innerHeight - 0.5);
+
+      card.style.transform =
+        `translateY(0) rotateX(${y * -5}deg) rotateY(${x * 6}deg) scale(1.01)`;
+    });
+
+    window.addEventListener("pointerleave", () => {
+      card.style.transform = "translateY(0) rotateX(0) rotateY(0) scale(1)";
+    });
+
+    // Pétalos flotando
+    function createPetal() {
+      const p = document.createElement("span");
+      p.className = "petal";
+
+      const size = 5 + Math.random() * 8;
+      const duration = 5 + Math.random() * 6;
+
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.width = size + "px";
+      p.style.height = size * 1.35 + "px";
+      p.style.opacity = .35 + Math.random() * .5;
+      p.style.setProperty("--drift", (Math.random() * 180 - 90) + "px");
+      p.style.setProperty("--rotation", (Math.random() * 900 - 450) + "deg");
+      p.style.animationDuration = duration + "s";
+
+      document.body.appendChild(p);
+
+      setTimeout(() => p.remove(), duration * 1000 + 500);
+    }
+
+    setInterval(createPetal, 480);
+
+    // Destellos dorados
+    function createSpark() {
+      const s = document.createElement("span");
+      s.className = "spark";
+      s.style.left = (5 + Math.random() * 90) + "vw";
+      s.style.top = (5 + Math.random() * 90) + "vh";
+      s.style.animationDelay = (Math.random() * 2) + "s";
+      document.body.appendChild(s);
+
+      setTimeout(() => s.remove(), 3500);
+    }
+
+    setInterval(createSpark, 700);
+
+    // Música: funcionará cuando agregues musica.mp3 al proyecto.
+    musicBtn.addEventListener("click", async () => {
+      try {
+        if (music.paused) {
+          await music.play();
+          musicBtn.classList.add("playing");
+          musicBtn.textContent = "♫";
+        } else {
+          music.pause();
+          musicBtn.classList.remove("playing");
+          musicBtn.textContent = "♪";
+        }
+      } catch (err) {
+        alert("Agrega un archivo llamado musica.mp3 a la carpeta de la invitación.");
+      }
+    });
+  </script>
+</body>
+</html>
